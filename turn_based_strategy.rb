@@ -39,4 +39,54 @@ mountains = Terrain.new("Mountains")
 plains = Terrain.new("Plains")
 water = Terrain.new("Water")
 
+# Implementing Maps with Matrices
+#
+# In the Map class you're soing to need to store objects in a data
+# structure indexed by x and y coordinates e.g map[x,y]
+#
+# if *map* was a regular array map[x,y] would return the element at 
+# index x as well as the elements at index y
+#
+# Instead you'd like to get back an object from a 2D structure at the
+# intersection of the x'th column and y'th row
+#
+# We build such a structure and name it *Matrix*
+#
+# It will be internally built ussing an instance of class Array that
+# contains more instances of Array inside itself
+# 
 
+class Matrix
+  def initialize(rows,cols )
+    @rows = rows
+    @cols = cols
+    @data = []
+    rows.times do |y|
+      @data[y] = Array.new(cols)
+    end
+  end
+
+  #NOTE: remember that y axis is actually the row axis direction
+  #while x axis is the column direction
+  def [](x,y)
+    @data[y][x]
+  end
+
+  def []=(x,y, value)
+    @data[y][x] = value
+  end
+
+  # method that returns all positions in the Matrix
+  def all_positions
+
+    # collect method is the same as map
+    (0...@rows).collect do |y|
+      (0...@cols).collect do |x|
+        [x,y]
+      end
+    end.inject([]) { |a,b| a.concat b }
+  end
+end
+
+matrix = Matrix.new(2,2)
+p matrix.all_positions
