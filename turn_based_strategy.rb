@@ -26,8 +26,17 @@ class Terrain
   end
 end
 
+# a Terrain is only distinguished by its name
+#
+# you'll be using these Terrain types to describe your map 
+# you'll also need to keep track of both the terrain at any given 
+# square and who if any is standing on it
+#
+# here we are only allowing one Unit to occupy a given square at a time
 forest = Terrain.new("Forest")
 grass = Terrain.new("Grass")
 mountains = Terrain.new("Mountains")
 plains = Terrain.new("Plains")
 water = Terrain.new("Water")
+
+
