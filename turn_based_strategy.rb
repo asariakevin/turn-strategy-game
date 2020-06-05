@@ -115,8 +115,8 @@ class Map
 
   def move(old_x, old_y, new_x, new_y)
     raise LocationOccuppiedError.new(new_x, new_y) if @units[new_x, new_y]
-    @unit[new_x,new_y] = @unit[old_x,old_y]
-    @unit[old_x,old_y] = nil
+    @units[new_x,new_y] = @units[old_x,old_y]
+    @units[old_x,old_y] = nil
   end
 end
 
@@ -148,7 +148,7 @@ class Map
     x = rows[0].size
 
     @terrain = Matrix.new(x,y)
-    @units = Matric.new(x,y)
+    @units = Matrix.new(x,y)
 
     rows.each_with_index do |row, y|
       row.each_with_index do |glyph, x|
@@ -161,13 +161,13 @@ end
 
 # Example
 #
-# terrain_key = {
-# "f": forest
-# "g": grass,
-# "m": mountains,
-# "p": plains
-# "w": water
-# }
+ terrain_key = {
+ "f" =>  forest,
+ "g" =>  grass,
+ "m" => mountains,
+ "p" => plains,
+ "w" => water
+ }
 #
 #
 # map = Map.new terrain_key, <<-END
@@ -180,6 +180,17 @@ end
 #   ggggggggggggggg
 #   ggggggggggwwfff
 #
+
+layout = <<-EOM
+   ggggggggggggggg
+   ggggggggggggggg
+   ggggggggggwwwww
+   ggggggggggggggg
+   ggggggggggggggg
+   gggggggggpppppp
+   ggggggggggggggg
+   ggggggggggwwfff
+EOM
 #
 # map.terrain[0,0],name -> Grass
 #
@@ -338,3 +349,29 @@ class Unit
     @y = y
   end
 end
+
+# Stubbing Out Undefined classes
+#
+# Because you haven't written your Game classes or classes to represent your players
+# you can't run the preceding code
+#
+# However , if you're willing to 'stub out' the missing classes with
+# a bare minimum of functionality , you can at least try out some of
+# the code
+
+class FakeGame
+  attr_accessor :map
+end
+
+class FakePlayer
+  attr_accessor :game
+end
+
+# This is enough to create a fake player and game to use with your units
+
+player = FakePlayer.new
+player.game = FakeGame.new
+player.game.map = Map.new(terrain_key, layout)
+dixie = Unit.new(player,"Dixie")
+player.game.map.place(0,0,dixie)
+dixie.move(1,0)
