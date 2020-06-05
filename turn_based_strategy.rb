@@ -57,7 +57,7 @@ water = Terrain.new("Water")
 # 
 
 class Matrix
-  def initialize(rows,cols )
+  def initialize(rows,cols)
     @rows = rows
     @cols = cols
     @data = []
@@ -88,5 +88,40 @@ class Matrix
   end
 end
 
-matrix = Matrix.new(2,2)
-p matrix.all_positions
+# Cartography 101
+#
+# The Map class will contain two matrices in instance variables
+# one will hold Terrain instances while the other Unit instances
+#
+# Both will require accessors
+#
+
+class Map
+  attr_reader :terrain , :units
+end
+
+# Both matrices will be the same size 
+# The @units Matrix will start unpopulated and units will be added 
+# using the *place* method
+
+
+class Map
+  def place(x,y, unit)
+
+    @units[x,y] = unit
+    unit.x = x
+    unit.y = y
+  end
+
+  def move(old_x, old_y, new_x, new_y)
+    raise LocationOccuppiedError.new(new_x, new_y) if @units[new_x, new_y]
+    @unit[new_x,new_y] = @unit[old_x,old_y]
+    @unit[old_x,old_y] = nil
+  end
+end
+
+class LocationOccuppiedError < Exception
+end
+
+
+end
