@@ -203,3 +203,36 @@ class Map
     all_positions.find_all { |x2, y2| within?(distance, x,y, x2, y2) }
   end
 end
+
+# Representing a Map
+#
+# Since a *Map* consists of information about *Terrain* and *Unit*
+# instances , we'll return a list containing each in turn
+#
+
+class Map
+  def rep
+    return [@terrain.rep, @units.rep]
+  end
+end
+
+# to do the above we need a *rep* method for the *Matrix* class
+#
+
+class Matrix
+  def rep
+    @data.collect do |row|
+      row.collect do |item|
+        item.rep
+      end
+    end
+  end
+end
+
+# since @units Matrix might have some nils nil needs a representation
+
+class NilClass
+  def rep
+    nil
+  end
+end
