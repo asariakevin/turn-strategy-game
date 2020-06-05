@@ -236,3 +236,19 @@ class NilClass
     nil
   end
 end
+
+# Meeting Your Heroes
+#
+# we need some classes to represent both the player's characters as
+# well as the enemy dinosaurs
+
+class Unit; end
+
+class Human < Unit; end
+class Soldier < Human; end
+class Doctor < Human; end
+
+class Dinosaur < Unit ; end
+class VRaptor < Dinosaur; end
+class TRex < Dinosaur ; end
+
