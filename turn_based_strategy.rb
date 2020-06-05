@@ -123,5 +123,83 @@ end
 class LocationOccuppiedError < Exception
 end
 
+# Where does terrain come from?
+# here we turn a string or file containing the layout into a *Map*
+# The *initialize* method does this
+#
+# you start with a terrain key and a layout string
+# then you break the text into lines to get your rows
+# ignore any white space
+#
+# This is nice beacue it means you can have spaces at the 
+# beginning of the lines if you have maps embedded in your source 
+# code and want to tab indent them to level of the surrounding code
+#
+#
+#
 
+class Map
+
+  def initialize(key, layout)
+    rows = layout.split("\n" )
+    rows.collect! { |row| row.gsub(/\s+/, '').split(//) }
+
+    y = rows.size
+    x = rows[0].size
+
+    @terrain = Matrix.new(x,y)
+    @units = Matric.new(x,y)
+
+    rows.each_with_index do |row, y|
+      row.each_with_index do |glyph, x|
+        @terrain[x,y] = key[glyph]
+      end
+    end
+  end
+end
+
+
+# Example
+#
+# terrain_key = {
+# "f": forest
+# "g": grass,
+# "m": mountains,
+# "p": plains
+# "w": water
+# }
+#
+#
+# map = Map.new terrain_key, <<-END
+#   ggggggggggggggg
+#   ggggggggggggggg
+#   ggggggggggwwwww
+#   ggggggggggggggg
+#   ggggggggggggggg
+#   gggggggggpppppp
+#   ggggggggggggggg
+#   ggggggggggwwfff
+#
+#
+# map.terrain[0,0],name -> Grass
+#
+#
+# adding a few helper methods
+#
+
+class Map
+  def all_positions
+    @terrain.all_positions
+  end
+
+  # calculate whether the manhattan distance
+  #between two points is less than a certain number
+  def within?(distance, x1, y1, x2, y2)
+    (x1 - x2).abs + (y1 - y2).abs <= distance
+  end
+
+  # returns a list of nearby locations
+  def near_positions(distance, x,y)
+    all_positions.find_all { |x2, y2| within?(distance, x,y, x2, y2) }
+  end
 end
