@@ -252,3 +252,89 @@ class Dinosaur < Unit ; end
 class VRaptor < Dinosaur; end
 class TRex < Dinosaur ; end
 
+# The Universal Skeleton
+#
+# all Unit classes have a name and a health counter
+#
+
+class Unit
+  attr_reader :name, :health, :movement, :actions
+  attr_accessor :x, :y
+
+  def initialize(player, name)
+    # player represents either a human or a computer that controls
+    # a team of units
+    #
+    # Player objects also provide access to the *Game* object through
+    # the game method
+    #
+    # Once you have a reference to the *Game*, you can script anything
+    # you need
+    @player = player
+    @name = name
+    @health = 10
+    @movement = 2
+    @actions = []
+  end
+end
+
+# since units have health points , you'll want a way for units to be
+# injured as well
+#
+# the following additions make that possible as well as opening the
+# door for subclasses to perform special behaviour upon death
+
+class Unit
+  def hurt(damage)
+    #Units that are dead can't take any more damage
+    return if dead?
+    @health -= damage
+    die if dead?
+  end
+
+
+  # Units are considered dead if they have 0 or fewer hit points
+  def dead?
+    return @health <= 0
+  end
+
+  def alive?
+    return !dead?
+  end
+
+  def die
+    player.game.message_all("#{name} died")
+  end
+end
+
+#Units also can tell that another unit is an ene,y if it is controlled
+#by another player or that a unit is a friend if it is controlled by
+#the same player
+#
+
+class Unit
+  def enemy?(other)
+    (other != nil) && (player != other.player)
+  end
+
+  def friend?(other)
+    (other != nil) && (player == other.player)
+  end
+end
+
+# Units also keep track of whether they've already acted this turn
+class Unit
+  def done?; @done ; end
+  def done; @done = true;end
+  def new_turn; @done = false ; end
+end
+
+# Units also move, the move method will take absolute coordinates to
+# make things easy
+class Unit
+  def move(x,y)
+    @player.game.map.move(@x,@y, x,y)
+    @x = x
+    @y = y
+  end
+end
