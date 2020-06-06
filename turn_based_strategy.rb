@@ -404,3 +404,65 @@ end
 # Example
 # trex = TRex.new(player, "Johan")
 # trex.rep => ["TRex", "Johan"]
+#
+#
+#  Making Choices
+#
+# There are more features to add to your Unit class which all resolve
+# around the notion of letting the player make choices
+#
+# e.g , your units have a *move* method but it's not enough to be 
+# able to move
+#
+# the units have to present a list of movement choices
+#
+# you chould only present movement choices that are reachable given
+# a unit's movement rate and it should only include valid coordinates
+# on the map
+#
+# The representations for these movement choices will look like:
+#
+#   ["Move",2,3]
+#   ["Move",3,2]
+#
+# the numbers being x and y coordinates respectively
+#
+# you need  a class to represent choices that will *bind* these representations to
+# the actions that accompany them
+
+class Choice 
+  attr_reader :rep
+
+  # using the special * prefix operator to inject a prebuilt list as
+  # the representation
+  def initialize(*rep, &action)
+    @rep, @action =  rep, action
+  end
+
+  def call(*args, &proc)
+    @action.call(*args,&proc)
+  end
+end
+
+# Instances of the *Choice* class are created with a representation 
+# and an action
+#
+# The representation can be accessed throught the *rep* method and
+# the action can be triggered with the *call* method
+#
+# Here's an example
+#
+#   x , y = 0,1
+#   choice = Choice.new("Move",x,y) { unit.move(x,y) }
+#   choice.rep => ["Move",0,1]
+#   choice.call
+#
+# you'll also define a constant Choice named DONE
+
+DONE = Choice.new("Done")
+
+# you'll use DONE to represent the player's desire to avoid a choice
+# or finish making choices , see the section titles "The Players" for
+# more information
+
+
