@@ -482,3 +482,20 @@ class  Unit
     end
   end
 end
+
+# Choosing Among Actions
+#
+# Each Unit type will have a list of actions it can take after it moves
+# The user will select one of the unit's actions and then potentially
+# select among the possible ways to take that action
+#
+# Below is how the list of action choices is generated:
+
+class Unit
+  def action_choices
+    return actions.collect do |action|
+      # note the prefix * is used here for flattening
+      Choice.new(*action.rep) { action }
+    end
+  end
+end
