@@ -375,3 +375,32 @@ player.game.map = Map.new(terrain_key, layout)
 dixie = Unit.new(player,"Dixie")
 player.game.map.place(0,0,dixie)
 dixie.move(1,0)
+
+# Representing Units
+#
+# representations are limited to lists, strings, numbers and nil
+# almost all of your representations will use at least one list as it
+# is your only container object
+#
+# you'll almost always list the distinguishing type of the representation in the
+# first position of the list
+#
+
+class Unit
+
+  def rep
+    [self.class.shortname, name]
+  end
+end
+
+class Class
+  # this returns the name of the class it is called on
+  # unlike the name method on class, it strips any module prefixes out
+  def shortname
+    name.gsub(/^.*:/, '')
+  end
+end
+
+# Example
+# trex = TRex.new(player, "Johan")
+# trex.rep => ["TRex", "Johan"]
