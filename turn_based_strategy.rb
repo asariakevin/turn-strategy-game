@@ -465,4 +465,20 @@ DONE = Choice.new("Done")
 # or finish making choices , see the section titles "The Players" for
 # more information
 
+# Finding Possible Moves
+#
+# Let's put the information about what moves are valid together with
+# these Choice objects inside the Unit class
 
+class  Unit
+
+  def move_choices
+    map = @player.game.map
+    all = map.all_positions
+    near = all.find_all { |x,y| map.within?(@movement, @x,@y,x,y) }
+    valid = near.find_all { |x,y| map.units[x,y].nil? }
+    return valid.collect do |x,y|
+      Choice.new("Move",x,y) {self.move(x,y)}
+    end
+  end
+end
