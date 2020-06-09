@@ -752,3 +752,69 @@ end
 #
 # the computer's do_choose method just always selects the first choice
 # of the options presented
+#
+#  Writing a Command-Line Player
+
+require 'pp'
+class CLIPlayer < BasePlayer
+  def message(string)
+    puts string
+  end
+
+  def draw(map)
+    puts "Terrain:"
+    pp map.terrain.rep
+    puts "Units:"
+    pp map.units.rep
+  end
+end
+
+# implementing the *do_choose* method
+
+class CLIPlayer 
+
+  
+  def do_choose(choices)
+
+    # first call a helper method that builds a mapping between
+    # the textual representations of choices and the choices themselves
+    mapping = rep_mapping(choices)
+
+    choice = nil
+
+    # print all the representations from the mapping and wait for
+    # command-line input
+    # 
+    # this input is then indexed into *rep_mapping* to retrueve
+    # the choice the user selected
+    #
+    # if the input is bad, the process is repeated
+    #
+    # finally, when a choice is selected, *do_choose* invokes its code
+    # block on the selected choice, which brings us to the *Game* class
+    until choice
+      puts "Choose: "
+      puts mapping.keys
+
+      print "Input: "
+      choice_key = STDIN.gets
+      choice = mapping[choice_key]
+
+      puts "Bad choice" unless choice
+    end
+
+    yield choice
+  end
+
+
+  # builds a hash table from versions of the representations of the
+  # choices converted into strings
+  def rep_mapping(data)
+    mapping = {}
+    data.each do |datum|
+      mapping[datum.rep.inspect] = datum
+    end
+
+    return mapping
+  end
+end
