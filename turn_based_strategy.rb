@@ -731,3 +731,24 @@ class BasePlayer
     choose(choices_or_done, &block)
   end
 end
+
+# The Artificial Intelligence Doesn't Seem So Intelligent
+
+class DumbComputer < BasePlayer
+  def message(string)
+  end
+
+  def draw(map)
+  end
+
+  def do_choose(choices)
+    yield choices[0]
+  end
+end
+
+# an empty *message* method will be the  standard for computer players
+# since they have little use for the niceties of the messages the 
+# game sends out
+#
+# the computer's do_choose method just always selects the first choice
+# of the options presented
