@@ -499,3 +499,235 @@ class Unit
     end
   end
 end
+
+# Taking Action
+#
+# Specific actions will be subclasses of the Action class
+# Each subclass of the Action class will have its own representation
+# available via the rep method
+#
+# Each will also have a method that will produce a list of instances
+# of the class that represent the possible ways the action could be
+# taken
+#
+# These instances will have their own representations and a call method that
+# can be invoked to actually perform the actions
+#
+
+class Action
+  def self.rep
+    ["Action", self.class.shortname]
+  end
+
+  def self.range(unit); 1;end
+  def self.target?(unit,other); unit.enemy?(other); end
+
+
+  # Default Action generator assumes action is something you
+  # do to the enemy standing next to you
+  #
+  # This behaviour will be overriden in many subclasses
+  def self.generate(unit,game)
+    map = game.map
+    near = map.near_positions(range(unit), unit.x, unit.y)
+    targets = near.find_all { |x,y| target?(unit, map.units[x,y]) }
+    return targets.collect { |x,y| self.new(unit, game, x , y) }
+  end
+end
+
+# following are the methods that will be called on the results
+# returned from the generate class method
+#
+class Action
+  attr_reader :unit, :game
+
+  # an x and y coordinate is passed in to represent the
+  # location of the action that could be performed
+  #
+  # this information is important to have around so you can pass it
+  # to the interface so that it can present a spatial selection
+  # mechanism
+  def initialize(unit, game, x,y)
+    @unit = unit
+    @game = game
+    @x = x
+    @y = y
+  end
+
+  #since the generic Action superclass should never have its call
+  #method invoked, you stub it out
+  def call
+    raise NotImplementedError
+  end
+
+  def target
+    game.map.units[@x,@y]
+  end
+
+  # the representation will contain the name of the action and the
+  # location it will occur at
+  #
+  # Action types that don't have a location should probably use the
+  # loaction of the acting unit
+  def rep
+    [self.class.shortname, @x, @y]
+  end
+end
+
+
+# implementing some Action subclasses
+#
+
+class Attack < Action
+  def damage_caused(unit); raise NotImplementedError; end
+  def past_tense; raise NotImplementedError; end
+
+  def call
+    amount = damage_caused()
+    game.message_all("#{unit.name} #{past_tense} #{target.name} for #{amount} damage")
+    target.hurt(amount)
+  end
+end
+
+class Bite < Attack
+  def damage_caused; @unit.teeth; end
+  def past_tense; "bit"; end
+end
+
+class Shoot < Attack
+  def self.range(unit); unit.range; end
+  def damage_caused; @unit.caliber; end
+  def past_tense; "shot"; end
+end
+
+class FirstAid < Action
+  def self.target?(unit,other); unit.friend?(other); end
+  def call
+    target.hurt(-unit.heal)
+    game.message_all("#{unit.name} healded #{target.name} for #{unit.heal} health")
+  end
+end
+
+# the representation for a Bite instance looks like this
+# ["Bite",0,1]
+
+class Human < Unit
+  attr_reader :caliber, :range
+
+  def initialize(*args)
+    super(*args)
+    @actions << Shoot
+    @caliber = 4
+    @range = 3
+  end
+end
+
+class Doctor < Human
+  attr_reader :heal
+
+  def initialize(*args)
+    super(*args)
+    @actions << FirstAid
+    @heal = 2
+  end
+end
+
+class Dinosaur < Unit
+  attr_reader :teeth
+
+  def initialize(*args)
+    super(*args)
+    @actions << Bite
+    @teeth = 2
+  end
+end
+
+class TRex < Unit
+  def initialize(*args)
+    @teeth = 5
+  end
+end
+
+# The Players
+#
+# here we start by creating a base player class that provides the
+# required infrastructure and then each different kind of player can 
+# subclass 
+
+class BasePlayer
+  attr_reader :name
+  attr_accessor :game
+
+  def initialize(name)
+    @name = name
+    @units = []
+  end
+
+  def message(string); raise NotImplementedError; end
+  def draw(map); raise NotImplementedError; end
+  def do_choose; raise NotImplementedError; end
+end
+
+# at the minimum , each player needs a name and a reference to the
+# master Game object
+#
+# you also need to keep track of a player's units
+#
+# the *game* instance variable is not set in the constructor because
+# it is set via the accessor defined in the preceding code when a
+# player is added to a game with *add_player*
+#
+
+class BasePlayer
+  
+  def add_unit(unit); @units.push unit; end
+  def clear_units; @units = []; end
+  def units_left?; @units.any? { |unit| unit.alive? }; end
+  def new_turn; @units.each { |unit| unit.new_turn }; end
+  def done; @game.message_all("Level finished"); end
+
+  def unit_choices
+    not_done = @units.find_all { |unit| unit.alive? && ! unit.done? }
+    return not_done.map do |unit|
+      Choice.new("Unit", unit.x, unit.y) { unit }
+    end
+  end
+end
+
+# Implementing the various choice methods will be the majority of the
+# code
+
+class BasePlayer
+  def choose(choices, &block)
+    do_choose(choices, &block) if choices?(choices)
+  end
+
+  def choices?(choices)
+    !( choices.empty? || (choices.size == 1 && choices[0] == DONE) )
+  end
+end
+
+class BasePlayer
+
+  def choose_all(choices, &block)
+    while choices?(choices)
+      choose(choices) do |choice|
+        block.call(choice)
+        choices.delete(choice)
+      end
+    end
+  end
+
+
+  def choose_all_or_done(choices, &block)
+    choices_or_done = choices.dup
+    choices_or_done.push DONE
+    choose_all(choices_or_done, &block)
+  end
+
+  def choose_or_done(choices, &block)
+    choose_or_done = choices.dup
+    choices_or_done.push DONE
+    choose(choices_or_done, &block)
+  end
+end
