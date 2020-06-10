@@ -41,7 +41,7 @@ water = Terrain.new("Water")
 
 # Implementing Maps with Matrices
 #
-# In the Map class you're soing to need to store objects in a data
+# In the Map class you're going to need to store objects in a data
 # structure indexed by x and y coordinates e.g map[x,y]
 #
 # if *map* was a regular array map[x,y] would return the element at 
@@ -52,7 +52,7 @@ water = Terrain.new("Water")
 #
 # We build such a structure and name it *Matrix*
 #
-# It will be internally built ussing an instance of class Array that
+# It will be internally built using an instance of class Array that
 # contains more instances of Array inside itself
 # 
 
@@ -318,7 +318,7 @@ class Unit
   end
 end
 
-#Units also can tell that another unit is an ene,y if it is controlled
+#Units also can tell that another unit is an enemy if it is controlled
 #by another player or that a unit is a friend if it is controlled by
 #the same player
 #
@@ -384,7 +384,7 @@ dixie.move(1,0)
 #
 # you'll almost always list the distinguishing type of the representation in the
 # first position of the list
-#
+
 
 class Unit
 
