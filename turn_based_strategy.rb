@@ -54,7 +54,7 @@ water = Terrain.new("Water")
 #
 # It will be internally built using an instance of class Array that
 # contains more instances of Array inside itself
-# 
+ 
 
 class Matrix
   def initialize(rows,cols)
@@ -512,7 +512,7 @@ end
 #
 # These instances will have their own representations and a call method that
 # can be invoked to actually perform the actions
-#
+
 
 class Action
   def self.rep
@@ -816,5 +816,164 @@ class CLIPlayer
     end
 
     return mapping
+  end
+end
+
+# The GAme
+#
+# The Game class is going to control your turn-based strategy game
+#
+# The base Game class will keep track of lists of maps and players as
+# well as an index into each of the lists pointing to the current map
+# and the player whose turn it is currently
+
+class Game
+  attr_reader :players
+
+  def initialize
+    @maps = []
+    @on_start = []
+    @players = []
+
+    @map_index = 0
+    @player_index = 0
+    @done = false
+  end
+
+  def map; @maps[@map_index]; end
+  def player; @players[@player_index]; end
+  def next_map; @map_index += 1; end
+
+  # as you rotate through the players , you expect to return to the
+  # beginning again, to do so we modulo the index by the total 
+  # number of players
+  #
+  # you don't need to worry about this for the maps because , when all
+  # the maps have been played,you'd like the game to end
+  #
+  def next_player; @player_index = (@player_index + 1) % @players.size; end
+  def start_map; @on_start[@map_index].call(map) if @on_start[@map_index]; end
+end
+
+# the *add_map* method not only add map to the game instance but it
+# also takes in an optional block to be triggered using the *start_map* method
+#
+#The game's *turn* method will be able to invoke this callback for the
+#currnt map using the *start* method
+#this is useful for dynamically creating enemies for maps and laying
+#out the units
+#
+class Game
+  def add_map(map, &on_start)
+    @maps.push map
+    @on_start.push on_start
+  end
+
+  def add_player(player)
+    @players.push player
+    player.game = self
+  end
+end
+
+# you also need a *done* method that notifies each player that the
+# level is over and a *done?* method to check if the @done variable
+# has been set
+
+class Game
+  def done
+    players.each { |player| player.done }
+    @done = true
+  end
+
+  def done?; @done; end
+end
+
+# you want methods to force all players to redraw their displays or
+# display a message
+
+class Game
+  def draw_all
+    @players.each { |player| player.draw(map) }
+  end
+
+  def message_all(text)
+    @players.each { |player| player.message(text) }
+  end
+end
+
+# implementing run
+class Game
+  def run
+    message_all("Welcome to #{name}!")
+
+    while true
+      break unless map
+
+      start_map
+      until done?
+        turn(player())
+        next_player()
+      end
+
+      next_map
+    end
+
+    message_all("Thanks for playing.")
+  end
+
+end
+
+# all the hard work is done inside the *turn* method that our subclasses must provide
+# The *name* method will also be implemented there
+
+class Game
+  def turn
+    raise NotImplementedError
+  end
+
+  def name
+    raise NotImplementedError
+  end
+end
+
+
+class DinoWars < Game
+  def name
+    return "DinoWars: WestWard Ho!"
+  end
+
+  def turn(player)
+
+    player.new_turn
+
+    draw_all()
+
+    player.choose_all_or_done(player.unit_choices) do |choice|
+      break if choice == DONE
+      unit = choice.call
+
+      draw_all()
+
+      player.choose(unit.move_choices) do |move|
+        move.call
+      end
+
+      draw_all()
+
+      player.choose_or_done(unit.action_choices) do |choice|
+        break if choice == DONE
+        action = choice.call
+
+        player.choose(action.generate(unit,self)) do |action_instance|
+          action_instance.call
+        end
+      end
+
+      unit.done
+
+      draw_all()
+    end
+
+    done() unless players().find_all{ |player| player.units_left? }.size > 1
   end
 end
