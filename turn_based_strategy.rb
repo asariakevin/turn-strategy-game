@@ -191,6 +191,8 @@ layout = <<-EOM
    ggggggggggggggg
    ggggggggggwwfff
 EOM
+
+map1 = Map.new(terrain_key,layout)
 #
 # map.terrain[0,0],name -> Grass
 #
@@ -269,7 +271,7 @@ class TRex < Dinosaur ; end
 #
 
 class Unit
-  attr_reader :name, :health, :movement, :actions
+  attr_reader :name, :health, :movement, :actions, :player
   attr_accessor :x, :y
 
   def initialize(player, name)
@@ -325,11 +327,11 @@ end
 
 class Unit
   def enemy?(other)
-    (other != nil) && (player != other.player)
+    (other != nil) && (@player != other.player)
   end
 
   def friend?(other)
-    (other != nil) && (player == other.player)
+    (other != nil) && (@player == other.player)
   end
 end
 
@@ -369,12 +371,12 @@ end
 
 # This is enough to create a fake player and game to use with your units
 
-player = FakePlayer.new
-player.game = FakeGame.new
-player.game.map = Map.new(terrain_key, layout)
-dixie = Unit.new(player,"Dixie")
-player.game.map.place(0,0,dixie)
-dixie.move(1,0)
+#player = FakePlayer.new
+#player.game = FakeGame.new
+#player.game.map = Map.new(terrain_key, layout)
+#dixie = Unit.new(player,"Dixie")
+#player.game.map.place(0,0,dixie)
+#dixie.move(1,0)
 
 # Representing Units
 #
@@ -642,7 +644,7 @@ class Dinosaur < Unit
   end
 end
 
-class TRex < Unit
+class TRex < Dinosaur
   def initialize(*args)
     @teeth = 5
   end
@@ -727,8 +729,8 @@ class BasePlayer
 
   def choose_or_done(choices, &block)
     choose_or_done = choices.dup
-    choices_or_done.push DONE
-    choose(choices_or_done, &block)
+    choose_or_done.push DONE
+    choose(choose_or_done, &block)
   end
 end
 
@@ -785,7 +787,7 @@ class CLIPlayer
     # print all the representations from the mapping and wait for
     # command-line input
     # 
-    # this input is then indexed into *rep_mapping* to retrueve
+    # this input is then indexed into *rep_mapping* to retrieve
     # the choice the user selected
     #
     # if the input is bad, the process is repeated
@@ -797,7 +799,7 @@ class CLIPlayer
       puts mapping.keys
 
       print "Input: "
-      choice_key = STDIN.gets
+      choice_key = STDIN.gets.chomp
       choice = mapping[choice_key]
 
       puts "Bad choice" unless choice
@@ -977,3 +979,53 @@ class DinoWars < Game
     done() unless players().find_all{ |player| player.units_left? }.size > 1
   end
 end
+
+# Putting it All Together
+#
+# you'll start by constructing your Game instance and your players
+
+game = DinoWars.new
+
+human = CLIPlayer.new("Human")
+computer = DumbComputer.new("Computer")
+
+game.add_player(human)
+game.add_player(computer)
+
+# then we add the human player's units  which will persist across Map instances
+
+nathan = Soldier.new(human,"Nathan")
+vik = Soldier.new(human,"Vik")
+winston = Doctor.new(human,"Winston")
+
+human.add_unit(nathan)
+human.add_unit(vik)
+human.add_unit(winston)
+
+# assuming that the map you defined before has been named *map1*
+# you can script the placement of the good guys and the creation
+# of the bad guys in the add_map method callback
+
+game.add_map(map1) do |map|
+  map.place(3,0,nathan)
+  map.place(4,0,vik)
+  map.place(5,0,winston)
+
+
+  vr1 = VRaptor.new(computer, 'Velociraptor 1')
+  vr2 = VRaptor.new(computer, 'Velociraptor 2')
+  vr3 = VRaptor.new(computer, 'Velociraptor 3')
+
+  computer.clear_units
+  computer.add_unit(vr1)
+  computer.add_unit(vr2)
+  computer.add_unit(vr3)
+
+  map.place(0,5,vr1)
+  map.place(0,5,vr2)
+  map.place(0,5,vr3)
+end
+
+# finally just run the game
+
+game.run
